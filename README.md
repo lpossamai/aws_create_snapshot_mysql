@@ -6,7 +6,7 @@ Creating automated snapshots at AWS for a MySQL partition (Slave DB Server)
 1. Create a snapshot from the Mysql Slave server
     1. Only if the replication lag is 0; else wait until the slave gets up-to-date with the master
 
-# Requisits:
+# Requisite:
 
 1. You'll need a MySQL Standby DB Server running
 2. You'll need a root access to that MYSQL Instance
