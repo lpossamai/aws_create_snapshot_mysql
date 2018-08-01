@@ -17,12 +17,13 @@ TIMESTAMP=$(date +'%Y-%m-%dT%H:%M:%S-NZST')
 REGION=ap-southeast-2
 THIS_HOST=$(hostname | cut -f1 -d.)
 SNAP_NAME_NEW="${THIS_HOST}-${TIMESTAMP}"
-AWS_SNS_TOPIC="CHANGEME: Change to your AWS SNS Topic. (i.e arn:aws:sns:ap-southeast-2:1562362562467:bauDevOpsSNS)"
+AWS_SNS_TOPIC="CHANGEME: Change this to your own ARN - arn:aws:sns:ap-southeast-2:15667:bauDevSNS"
 MYSQL_VOLUME="/mysql"
 LOG=/root/scripts/logs
 MYSQL_SLAVE_INSTANCE_ID=$(/usr/bin/ec2metadata --instance-id)
 MYSQL_SNAP_PREFIX="/mysql"
 LOG_SNAP=/root/scripts/logs/mysql_snap.log
+CHECK_MYSQL_RUNNING=$(ps -ef|grep -e 'mysqld' |grep -v 'grep' | wc -l)
 
 # Getting the volume-id
 GET_VOLUME_ID=$(aws ec2 describe-volumes --region $REGION --filters Name=attachment.instance-id,Values=$MYSQL_SLAVE_INSTANCE_ID Name=tag:volume-type,Values=mysql-prod --query "Volumes[*].VolumeId" | grep 'vol-' | sed -e 's/^ *//' -e 's/^"//'  -e 's/"$//')
@@ -55,6 +56,16 @@ wait_snapshot
 echo "MESSAGE: Starting up the MYSQL process" | tee -a ${LOG_SNAP}
 service mysql stop
 service mysql start
+
+# We checked if the MYSQL process has been started. If not, send an email.
+if [ $CHECK_MYSQL_RUNNING -gt 0 ]; then
+	echo "MySQL successfully started"
+else
+	MESSAGE="MySQL process couldn't be started on ${hostname}."
+	SUBJECT="ERROR: Error when starting up MySQL on ${hostname}."
+	db_send_sns
+	exit 1
+fi
 
 echo "MESSAGE: Check snapshot ID" | tee -a ${LOG_SNAP}
 check_snapshot
