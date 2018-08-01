@@ -8,6 +8,8 @@
 #  1.1 Only if the replication lag is 0; else wait until the slave gets up-to-date with the master
 ############################################
 
+export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/root/aws-stack
+
 . ./mysql-create-snapshot.inc.sh
 
 ##set -x
